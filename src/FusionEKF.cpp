@@ -80,9 +80,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
             previous_timestamp_ = measurement_pack.timestamp_;
 
-        } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-            previous_timestamp_ = measurement_pack.timestamp_;
-
             float rho = x1;
             float phi = x2;
 
@@ -96,6 +93,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
             x1 = rho * cos(phi);
             x2 = rho * sin(phi);
 
+        } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
+            previous_timestamp_ = measurement_pack.timestamp_;
         }
 
         ekf_.x_ << x1, x2, 0.01, 0.01;
