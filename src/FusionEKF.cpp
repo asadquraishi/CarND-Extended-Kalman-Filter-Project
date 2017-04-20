@@ -69,24 +69,36 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         // first measurement
         ekf_.x_ = VectorXd(4);
 
-        float px = measurement_pack.raw_measurements_[0];
-        float py = measurement_pack.raw_measurements_[1];
-        if (px==0 && py ==0){
-            px = 0.001;
-            py = 0.001;
+        float x1 = measurement_pack.raw_measurements_[0];
+        float x2 = measurement_pack.raw_measurements_[1];
+        if (x1==0 && x2 ==0){
+            x1 = 0.001;
+            x2 = 0.001;
         }
-        ekf_.x_ << px, py, 0.01, 0.01;
+        //ekf_.x_ << x1, x2, 0.01, 0.01;
 
         if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-            Tools tools;
-            ekf_.R_ = R_radar_;
-            ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
+            previous_timestamp_ = measurement_pack.timestamp_;
 
         } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
             previous_timestamp_ = measurement_pack.timestamp_;
-            ekf_.R_ = R_laser_;
-            ekf_.H_ = H_laser_;
+
+            float rho = x1;
+            float phi = x2;
+
+            if (phi > M_PI) {
+                phi = phi - 2*M_PI;
+            } else if (phi < -M_PI) {
+                phi = phi - 2*M_PI;
+            }
+
+            // Calculate px and py based on the polar coordinates of phi and rho
+            x1 = rho * cos(phi);
+            x2 = rho * sin(phi);
+
         }
+
+        ekf_.x_ << x1, x2, 0.01, 0.01;
 
         // done initializing, no need to predict or update
         is_initialized_ = true;
